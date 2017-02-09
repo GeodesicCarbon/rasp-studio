@@ -1,6 +1,8 @@
 # Raspberry Pi studio control software
 # Version 0.1.2
 import RPi.GPIO as GPIO
+import serial
+ser = serial.Serial('/dev/tty', 9600) # IMPORTANT: change this to actual address
 GPIO.setmode(GPIO.BCM)
 
 print "Initializing, please wait ..."
@@ -9,8 +11,8 @@ sub_sw_pin = 24 # Pin for secondary switch
 
 led_pin = 23 # Pin for main status LED
 
-main_power_pins = [7, 8, 9} # TODO: figure out which is which
-sub_power_pins = [10, 11, 22, 21]
+main_power_pins = [2, 3, 4] # TODO: figure out which is which
+sub_power_pins = [5, 6, 7, 8]
 
 power_delay = 0.5 # Delay in s between sequentially powering on devices
 
@@ -22,8 +24,6 @@ GPIO.setup(sub_sw_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 GPIO.setup(led_pin, GPIO.OUT) # Initializing led pin
 
-GPIO.setup(main_power_pins + sub_power_pins, GPIO.OUT, initial=GPIO.HIGH) # Initilizing power pins
-
 def power_off(channel):# Turning main power off sequentially in reverse order
     global power_flag
     if sub_flag: # Turning sub power off if on
@@ -31,8 +31,9 @@ def power_off(channel):# Turning main power off sequentially in reverse order
         sleep(2.5)
         sub_off(main_sw_pin)
     for pin in main_power_pins:
-        GPIO.output(relay_1c_pin, GPIO.HIGH)
-        time.sleep(power_delay)
+        ser.write(chr(pin))
+        ser.write('0')
+        sleep(power_delay)
     GPIO.output(led_pin, GPIO.LOW) # Led off
     power_flag = 0
     print "Main power turned off"
@@ -41,7 +42,8 @@ def power_on(channel):
     print "Toggling main power"
     global power_flag
     for pin in main_power_pins:
-        GPIO.output(pin, GPIO.LOW)
+        ser.write(chr(pin))
+        ser.write('1')
         time.sleep(power_delay)
     power_flag = 1 # Led on
     print "Main power turned on"
@@ -50,17 +52,19 @@ def sub_off(channel):
     global sub_flag # Turning sub power off sequentially in reverse order
     print "Turning off sub power"
     for pin in sub_power_pins:
-        GPIO.output(pin, GPIO.HIGH)
+        ser.write(chr(pin))
+        ser.write('0')
         time.sleep(power_delay)
     sub_flag = 1
     print "Sub power turned off"
-        
+
 def sub_on(channel):
     global sub_flag # Turning sub power on sequentially
-    if power_flag: 
+    if power_flag:
     print "Turning on sub power"
     for pin in sub_power_pins:
-        GPIO.output(pin, GPIO.LOW)
+        ser.write(chr(pin))
+        ser.write('1')
         time.sleep(power_delay)
     sub_flag = 0
     print "Sub power turned on"
