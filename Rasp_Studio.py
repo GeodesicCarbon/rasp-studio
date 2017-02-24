@@ -1,5 +1,5 @@
 # Raspberry Pi studio control software
-# Version 0.1.2
+# Version 0.2.1
 import RPi.GPIO as GPIO
 import serial
 import time
@@ -19,7 +19,7 @@ power_flag = 0 # Flag for main power status
 
 main_power_pins = [2,3,4,5,6,7,8,9,10,11,12]
 
-GPIO.setup(main_sw_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP) #Initializing input pins
+GPIO.setup(main_sw_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) #Initializing input pins
 #GPIO.setup(sub_sw_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 GPIO.setup(led_pin, GPIO.OUT) # Initializing led pin
@@ -32,7 +32,7 @@ def power_off(channel):# Turning main power off sequentially in reverse order
 #        sub_off(main_sw_pin)
     for pin in main_power_pins:
         ser.write(bytes([ord('0') + pin * 2]))
-        sleep(power_delay)
+        time.sleep(power_delay)
     GPIO.output(led_pin, GPIO.LOW) # Led off
     power_flag = 0
     GPIO.remove_event_detect(25)
@@ -40,12 +40,12 @@ def power_off(channel):# Turning main power off sequentially in reverse order
     print ("Main power turned off")
 
 def power_on(channel):
-    print "Toggling main power"
+    print ("Toggling on main power")
     global power_flag
     for pin in main_power_pins:
         ser.write(bytes([ord('0') + pin * 2 + 1]))
-        ser.write('1')
         time.sleep(power_delay)
+    GPIO.output(led_pin, GPIO.HIGH) # LED on
     power_flag = 1 # Led on
     GPIO.remove_event_detect(main_sw_pin)
     GPIO.add_event_detect(main_sw_pin, GPIO.RISING, callback=power_off, bouncetime=1000) # Set up triggers
@@ -76,7 +76,7 @@ def power_on(channel):
 #         GPIO.add_event_detect(sub_sw_pin, GPIO.RISING, callback=sub_off, bouncetime=1000)
 #         print ("Sub power turned on")
 
-GPIO.add_event_detect(main_sw_pin, GPIO.FALLING, callback=power_on, bouncetime=1000) # Set up triggers
+GPIO.add_event_detect(main_sw_pin, GPIO.RISING, callback=power_on, bouncetime=1000) # Set up triggers
 # GPIO.add_event_detect(main_sw_pin, GPIO.RISING, callback=power_off, bouncetime=1000)
 # GPIO.add_event_detect(sub_sw_pin, GPIO.FALLING, callback=sub_on, bouncetime=1000)
 #GPIO.add_event_detect(sub_sw_pin, GPIO.RISING, callback=sub_off, bouncetime=1000)
