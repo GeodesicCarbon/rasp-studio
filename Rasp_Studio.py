@@ -26,6 +26,10 @@ GPIO.setup(led_pin, GPIO.OUT) # Initializing led pin
 
 def power_off(channel):# Turning main power off sequentially in reverse order
     global power_flag
+    for 1 to 3:
+        if(GPIO.input(main_sw_pin, GPIO.UP)):
+            return
+        time.sleep(0.1)
 #    if sub_flag: # Turning sub power off if on
 #        print ("Turning off sub power first")
 #        sleep(2.5)
@@ -36,19 +40,23 @@ def power_off(channel):# Turning main power off sequentially in reverse order
     GPIO.output(led_pin, GPIO.LOW) # Led off
     power_flag = 0
     GPIO.remove_event_detect(25)
-    GPIO.add_event_detect(main_sw_pin, GPIO.FALLING, callback=power_on, bouncetime=1000)
+    GPIO.add_event_detect(main_sw_pin, GPIO.RISING, callback=power_on, bouncetime=1000)
     print ("Main power turned off")
 
 def power_on(channel):
     print ("Toggling on main power")
     global power_flag
+    for 1 to 3:
+        if(GPIO.input(main_sw_pin, GPIO.DOWN)):
+            return
+        time.sleep(0.1)
     for pin in main_power_pins:
         ser.write(bytes([ord('0') + pin * 2 + 1]))
         time.sleep(power_delay)
     GPIO.output(led_pin, GPIO.HIGH) # LED on
     power_flag = 1 # Led on
     GPIO.remove_event_detect(main_sw_pin)
-    GPIO.add_event_detect(main_sw_pin, GPIO.RISING, callback=power_off, bouncetime=1000) # Set up triggers
+    GPIO.add_event_detect(main_sw_pin, GPIO.FALLING, callback=power_off, bouncetime=1000) # Set up triggers
     print ("Main power turned on")
 
 # def sub_off(channel):
