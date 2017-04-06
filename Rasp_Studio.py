@@ -34,7 +34,7 @@ def power_off(channel):# Turning main power off sequentially in reverse order
 #        print ("Turning off sub power first")
 #        sleep(2.5)
 #        sub_off(main_sw_pin)
-    for pin in main_power_pins:
+    for pin in main_power_pins.reverse:
         ser.write(bytes([ord('0') + pin * 2 + 1]))
         time.sleep(power_delay)
     GPIO.output(led_pin, GPIO.LOW) # Led off
@@ -96,6 +96,10 @@ try:
         time.sleep(1)
 except KeyboardInterrupt:
     print ("Exiting ...")
+    for pin in main_power_pins:
+        ser.write(bytes([ord('0') + pin * 2 + 1]))
+        time.sleep(power_delay)
+    GPIO.output(led_pin, GPIO.LOW) # Led off
     GPIO.cleanup()
     ser.close()
     print ("Have a nice day!")
