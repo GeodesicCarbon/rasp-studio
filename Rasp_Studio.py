@@ -1,5 +1,5 @@
 # Raspberry Pi studio control software
-# Version 0.2.1
+# Version 0.3.0
 import RPi.GPIO as GPIO
 import serial
 import time
@@ -26,8 +26,8 @@ GPIO.setup(led_pin, GPIO.OUT) # Initializing led pin
 
 def power_off(channel):# Turning main power off sequentially in reverse order
     global power_flag
-    for 1 to 3:
-        if(GPIO.input(main_sw_pin, GPIO.UP)):
+    for i in range(0,2):
+        if(GPIO.input(main_sw_pin)):
             return
         time.sleep(0.1)
     if sub_flag: # Turning sub power off if on
@@ -46,12 +46,12 @@ def power_off(channel):# Turning main power off sequentially in reverse order
 def power_on(channel):
     print ("Toggling on main power")
     global power_flag
-    for 1 to 3:
-        if(GPIO.input(main_sw_pin, GPIO.DOWN)):
+    for i in range(0,2):
+        time.sleep(0.01)
+        if(not GPIO.input(main_sw_pin)):
             return
-        time.sleep(0.1)
     for pin in main_power_pins:
-        ser.write(bytes([ord('0') + pin * 2 + 1]))
+        ser.write(bytes([ord('0') + pin * 2]))
         time.sleep(power_delay)
     GPIO.output(led_pin, GPIO.HIGH) # LED on
     power_flag = 1 # Led on
@@ -102,6 +102,10 @@ try:
         time.sleep(1)
 except KeyboardInterrupt:
     print ("Exiting ...")
+    for pin in main_power_pins:
+        ser.write(bytes([ord('0') + pin * 2 + 1]))
+        time.sleep(power_delay)
+    GPIO.output(led_pin, GPIO.LOW) # Led off
     GPIO.cleanup()
     power_off(25)
     ser.close()
